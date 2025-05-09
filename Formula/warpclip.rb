@@ -180,10 +180,21 @@ Host *
 
     # Auto-start after installation
     run_at_load true
-    
-    # Restart on reinstall, brew upgrade, etc.
-    on_service_restart do
-      ohai "Restarting warpclip service after update"
+  end
+
+  # Detect if service is running
+  def service_running?
+    service_info = `brew services list #{name}`.strip
+    service_info.include?("started")
+  end
+
+  # Service management hooks
+  def pre_install
+    # Save service state before installation/reinstall
+    @was_running = service_running?
+    if @was_running
+      ohai "Stopping warpclip service before installation"
+      system "brew", "services", "stop", name
     end
   end
 
@@ -202,9 +213,14 @@ Host *
     # Setup SSH config
     setup_ssh_config
 
-    # Inform about service
-    ohai "WarpClip installation complete. Service will start automatically at login."
-    ohai "You can manually start it now with: brew services start #{name}"
+    # Restart service if it was running before
+    if defined?(@was_running) && @was_running
+      ohai "Restarting warpclip service after installation"
+      system "brew", "services", "restart", name
+    else
+      ohai "WarpClip installation complete. Service will start automatically at login."
+      ohai "You can manually start it now with: brew services start #{name}"
+    end
   end
 
   def caveats
