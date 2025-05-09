@@ -14,9 +14,6 @@ class Warpclip < Formula
   depends_on :macos
   depends_on "go" => :build
 
-  # Ensure service starts at login
-  plist_options startup: true
-
   def install
     # Build the Go server daemon
     system "go", "build", "-o", bin/"warpclipd", 
