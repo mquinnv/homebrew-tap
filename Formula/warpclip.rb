@@ -183,14 +183,14 @@ Host *
   end
   
 
-  # Service management hooks
-  def pre_install
-    # Store current service status
-    @service_was_running = quiet_system("brew", "services", "list", name, "-q", "--started")
-    if @service_was_running
-      ohai "Stopping warpclip service for #{File.basename(caller[0]) =~ /reinstall/ ? 'reinstall' : 'installation'}"
-      quiet_system "brew", "services", "stop", name
+  # Hook called during bottle install, reinstall, and upgrade
+  def pour_bottle?
+    if (status = Utils.popen_read(HOMEBREW_BREW_FILE, "services", "list", name).include?("started"))
+      ohai "Stopping warpclip service for installation/reinstall"
+      system HOMEBREW_BREW_FILE, "services", "stop", name
+      ENV["HOMEBREW_WARPCLIP_WAS_RUNNING"] = "1"
     end
+    true
   end
 
   def post_install
@@ -209,9 +209,10 @@ Host *
     setup_ssh_config
 
     # Restart service if it was running before
-    if defined?(@service_was_running) && @service_was_running
-      ohai "Restarting warpclip service after #{File.basename(caller[0]) =~ /reinstall/ ? 'reinstall' : 'installation'}"
-      quiet_system "brew", "services", "restart", name
+    if ENV["HOMEBREW_WARPCLIP_WAS_RUNNING"] == "1"
+      ohai "Restarting warpclip service after installation"
+      system HOMEBREW_BREW_FILE, "services", "restart", name
+      ENV.delete("HOMEBREW_WARPCLIP_WAS_RUNNING")
     else
       ohai "WarpClip installation complete. Service will start automatically at login."
       ohai "You can manually start it now with: brew services start #{name}"
