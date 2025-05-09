@@ -1,8 +1,8 @@
 class Warpclip < Formula
   desc "Remote-to-local clipboard integration for terminal users"
   homepage "https://github.com/mquinnv/warpclip"
-  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v1.2.1.tar.gz"
-  sha256 "db9e5d7d107a219bca8d837058340d83eae48e796b9008f318bc30f784716f66"
+  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.0.tar.gz"
+  sha256 "b6abf23633ed000a1fdc686a277ec673a176252015c590c606a4759b61cd55f5"
   license "MIT"
   head "https://github.com/mquinnv/warpclip.git", branch: "main"
 
@@ -13,13 +13,16 @@ class Warpclip < Formula
 
   depends_on :macos
   depends_on "netcat"
+  depends_on "go" => :build
 
   def install
-    # Install the main command-line tool
-    bin.install "bin/warpclip"
-
-    # Install the server daemon
-    bin.install "src/warpclipd"
+    # Build from Go source
+    system "go", "build", "-o", "warpclip", "./cmd/warpclip"
+    system "go", "build", "-o", "warpclipd", "./cmd/warpclipd"
+    
+    # Install the main command-line tool and server daemon
+    bin.install "warpclip"
+    bin.install "warpclipd"
     
     # Update version and ensure proper localhost binding
     inreplace bin/"warpclipd" do |s|
@@ -205,7 +208,7 @@ Host *
 
   def caveats
     <<~EOS
-      WarpClip has been installed. To start the clipboard service:
+      WarpClip v2.1.0 has been installed. To start the clipboard service:
 
         brew services start warpclip
 
