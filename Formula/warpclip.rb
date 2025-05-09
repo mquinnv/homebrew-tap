@@ -1,8 +1,8 @@
 class Warpclip < Formula
   desc "Remote-to-local clipboard integration for terminal users"
   homepage "https://github.com/mquinnv/warpclip"
-  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.3.tar.gz"
-  sha256 "58d7994c687257f0731aa00b59b1d5d57f17ff6100fb09ac2d9a1db73f480f16"
+  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.1.tar.gz"
+  sha256 "1da8468757e966ac716fba7db048155dffd68752b362c4dad7ef24c3fe7a34d2"
   license "MIT"
   head "https://github.com/mquinnv/warpclip.git", branch: "main"
 
@@ -12,24 +12,18 @@ class Warpclip < Formula
   end
 
   depends_on :macos
-  depends_on "netcat"
   depends_on "go" => :build
 
   def install
-    # Build from Go source with version information
-    system "go", "build", 
+    # Build the Go server daemon
+    system "go", "build", "-o", bin/"warpclipd", 
            "-ldflags", "-X main.Version=#{version}",
-           "-o", "warpclip", 
-           "./cmd/warpclip"
-    
-    system "go", "build", 
-           "-ldflags", "-X main.Version=#{version}",
-           "-o", "warpclipd", 
            "./cmd/warpclipd"
     
-    # Install the main command-line tool and server daemon
-    bin.install "warpclip"
-    bin.install "warpclipd"
+    # Build the Go client
+    system "go", "build", "-o", bin/"warpclip",
+           "-ldflags", "-X main.Version=#{version}",
+           "./cmd/warpclip"
     
     # Set the proper permissions
     chmod 0755, bin/"warpclip"
@@ -204,7 +198,7 @@ Host *
 
   def caveats
     <<~EOS
-      WarpClip v2.1.3 has been installed. To start the clipboard service:
+      WarpClip has been installed. To start the clipboard service:
 
         brew services start warpclip
 
@@ -212,14 +206,16 @@ Host *
       1. LOCAL COMPONENT (warpclipd):
          • Runs on your Mac and listens for clipboard data
          • Started automatically by Homebrew Services
-
+         • Implemented in Go for improved security and reliability
+         
       2. REMOTE COMPONENT (warpclip):
          • Needs to be installed on remote servers you connect to
+         • Now implemented in Go with no external dependencies
          • Sends data back to your Mac through SSH tunnel
 
       To use WarpClip on a remote server:
-      1. Install the client script on your remote server:
-         #{opt_bin}/warpclip install-remote user@remote-server
+      1. Copy the warpclip binary to your remote server:
+         scp #{opt_bin}/warpclip user@remote-server:~/bin/
 
       2. Connect to your remote server with SSH forwarding:
          ssh user@remote-server
@@ -233,9 +229,8 @@ Host *
 
       • Copy data to clipboard (on remote server):
         cat file.txt | warpclip
-
-      • Install on a remote server (from local machine):
-        warpclip install-remote user@remote-server
+        echo "text" | warpclip
+        warpclip < file.txt
 
       • Show help and usage information:
         warpclip help
@@ -257,17 +252,11 @@ Host *
     assert_path_exists "#{opt_bin}/warpclipd"
     assert_path_exists "#{opt_bin}/warpclip"
 
-    # Basic syntax check for warpclip
-    system opt_bin/"warpclip", "--version"
+    # Check version output for both binaries
+    assert_match "v#{version}", shell_output("#{opt_bin}/warpclip --help")
+    assert_match "v#{version}", shell_output("#{opt_bin}/warpclipd --version")
 
     # Basic syntax check for warpclipd
-    begin
-      system opt_bin/"warpclipd", "status"
-    rescue
-      nil
-    end
-    # Check if the scripts have expected content
-    assert_match "WarpClip v#{version}", shell_output("#{opt_bin}/warpclip --version")
-    assert_match "warpclipd - WarpClip clipboard daemon", shell_output("head -n 10 #{opt_bin}/warpclipd")
+    system "#{opt_bin}/warpclipd", "--help"
   end
 end
