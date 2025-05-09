@@ -180,9 +180,6 @@ Host *
 
     # Auto-start after installation
     run_at_load true
-
-    # Set service management options
-    restart_service changed_files: ["#{HOMEBREW_PREFIX}/opt/#{name}/bin/warpclipd"]
   end
 
 
