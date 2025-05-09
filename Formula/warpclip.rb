@@ -14,6 +14,9 @@ class Warpclip < Formula
   depends_on :macos
   depends_on "go" => :build
 
+  # Ensure service starts at login
+  plist_options startup: true
+
   def install
     # Build the Go server daemon
     system "go", "build", "-o", bin/"warpclipd", 
@@ -32,32 +35,6 @@ class Warpclip < Formula
     # Install example files to share directory
     share.install "etc/com.user.warpclip.plist"
     share.install "examples/ssh_config" => "warpclip-ssh-config-example"
-  end
-
-  def post_install
-    # Create log files with proper permissions
-    ["#{Dir.home}/.warpclip.log",
-     "#{Dir.home}/.warpclip.debug.log",
-     "#{Dir.home}/.warpclip.out.log",
-     "#{Dir.home}/.warpclip.error.log"].each do |f|
-      unless File.exist?(f)
-        touch f
-        chmod 0600, f
-      end
-    end
-
-    # Setup SSH config
-    setup_ssh_config
-
-    # Inform about automatic service start
-    if defined?(@was_running)
-      # For reinstall/upgrade, service state is managed by post_install/upgrade_bottle_post_install 
-      ohai "WarpClip installation complete. Service state will be managed by the upgrade/reinstall process."
-    else
-      # For initial installation, inform about automatic start
-      ohai "WarpClip installation complete. Service will start automatically at login."
-      ohai "You can manually start it now with: brew services start #{name}"
-    end
   end
 
   def setup_ssh_config
@@ -206,72 +183,55 @@ Host *
 
     # Auto-start after installation
     run_at_load true
+
+    # Set service management options
+    restart_service changed_files: ["#{HOMEBREW_PREFIX}/opt/#{name}/bin/warpclipd"]
   end
 
 
-  # Helper methods for manipulating service state during operations
-  def stop_if_needed
-    if self.class.service_active?(name)
-      ohai "Stopping warpclip service"
-      system "brew", "services", "stop", name
-      true
-    else
-      false
+  # Service management methods for upgrade, reinstall, and removal
+
+  # Called before package installation
+  def pre_install
+    # Save current service state
+    @service_was_running = service_active?
+    
+    # Stop service if it's running
+    if @service_was_running
+      ohai "Stopping warpclip service for #{defined?(upgrade_bottle_pre_install) ? 'upgrade' : 'installation'}"
+      quiet_system "brew", "services", "stop", "warpclip"
     end
   end
 
-  def start_if_stopped
-    unless self.class.service_active?(name)
-      ohai "Starting warpclip service"
-      system "brew", "services", "start", name
-    end
-  end
-
-  # Handle service during reinstall
-  def pour_bottle?(*args)
-    # Stop the service before reinstall
-    @was_running = stop_if_needed 
-    result = super
-    # Schedule post-installation tasks
-    if result
-      singleton_class.class_eval do
-        alias_method :old_post_install, :post_install
-        define_method(:post_install) do
-          old_post_install
-          post_install_reinstall
-        end
+  # Called after package installation
+  def post_install
+    # Create log files with proper permissions
+    ["#{Dir.home}/.warpclip.log",
+     "#{Dir.home}/.warpclip.debug.log",
+     "#{Dir.home}/.warpclip.out.log",
+     "#{Dir.home}/.warpclip.error.log"].each do |f|
+      unless File.exist?(f)
+        touch f
+        chmod 0600, f
       end
     end
-    result
-  end
 
-  # Restart service after reinstall if it was running before
-  def post_install_reinstall
-    if @was_running
-      ohai "Restarting warpclip service after reinstall"
-      start_if_stopped
-    end
-  end
-  
-  # Handle service during upgrade
-  def upgrade_bottle_pre_install
-    @was_running = stop_if_needed
-    super
-  end
+    # Setup SSH config
+    setup_ssh_config
 
-  # Restart service after upgrade if it was running before
-  def upgrade_bottle_post_install
-    super
-    if @was_running
-      ohai "Restarting warpclip service after upgrade"
-      start_if_stopped
+    # Restart service if it was running before or inform about automatic startup
+    if defined?(@service_was_running) && @service_was_running
+      ohai "Restarting warpclip service after #{defined?(upgrade_bottle_post_install) ? 'upgrade' : 'installation'}"
+      quiet_system "brew", "services", "restart", "warpclip"
+    else
+      ohai "WarpClip installation complete. Service will start automatically at login."
+      ohai "You can manually start it now with: brew services start #{name}"
     end
   end
 
-  # Helper class method to check if a service is running
-  def self.service_active?(name)
-    service_list = `brew services list #{name}`.strip
-    service_list.include?("started")
+  # Method to check if service is active
+  def service_active?
+    `brew services list warpclip`.include?("started")
   end
 
   def caveats
