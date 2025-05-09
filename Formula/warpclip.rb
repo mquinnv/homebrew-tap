@@ -1,8 +1,8 @@
 class Warpclip < Formula
   desc "Remote-to-local clipboard integration for terminal users"
   homepage "https://github.com/mquinnv/warpclip"
-  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.1.tar.gz"
-  sha256 "1da8468757e966ac716fba7db048155dffd68752b362c4dad7ef24c3fe7a34d2"
+  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.2.tar.gz"
+  sha256 "9764d8bbba278cdb707a1b51460e8f2deb2d77d9316bf0f22ab4011acef71eb4"
   license "MIT"
   head "https://github.com/mquinnv/warpclip.git", branch: "main"
 
@@ -204,7 +204,7 @@ Host *
 
   def caveats
     <<~EOS
-      WarpClip v2.1.1 has been installed. To start the clipboard service:
+      WarpClip v2.1.2 has been installed. To start the clipboard service:
 
         brew services start warpclip
 
