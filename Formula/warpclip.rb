@@ -181,6 +181,7 @@ Host *
     # Auto-start after installation
     run_at_load true
   end
+  
 
   # Detect if service is running
   def service_running?
@@ -193,7 +194,8 @@ Host *
     # Save service state before installation/reinstall
     @was_running = service_running?
     if @was_running
-      ohai "Stopping warpclip service before installation"
+      operation = caller.any? { |c| c.include?("reinstall") } ? "reinstall" : "installation"
+      ohai "Stopping warpclip service before #{operation}"
       system "brew", "services", "stop", name
     end
   end
@@ -215,7 +217,8 @@ Host *
 
     # Restart service if it was running before
     if defined?(@was_running) && @was_running
-      ohai "Restarting warpclip service after installation"
+      operation = caller.any? { |c| c.include?("reinstall") } ? "reinstall" : "installation"
+      ohai "Restarting warpclip service after #{operation}"
       system "brew", "services", "restart", name
     else
       ohai "WarpClip installation complete. Service will start automatically at login."
