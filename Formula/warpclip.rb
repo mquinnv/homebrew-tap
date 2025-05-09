@@ -195,73 +195,67 @@ Host *
     # Restart if the process exits for any reason (with delay to prevent rapid restarts)
     restart_delay 5
 
-    # Enable service hooks for reinstall, upgrade, and uninstall operations
-    process_type :supervisor
+    # Configure as a background process
+    process_type :background
+
+    # Auto-start after installation
+    run_at_load true
   end
 
 
-  # Stop the service before upgrade and restart it after
-  def post_install_defined?
-    true
-  end
-
-  # Define what happens before service upgrade
-  def pre_upgrade
-    if service_active?
-      ohai "Stopping warpclip service for upgrade"
-      service_stop
+  # Helper methods for manipulating service state during operations
+  def stop_if_needed
+    if self.class.service_active?(name)
+      ohai "Stopping warpclip service"
+      system "brew", "services", "stop", name
+      true
+    else
+      false
     end
   end
 
-  # Define what happens after service upgrade
-  def post_upgrade
-    if @service_was_running
-      ohai "Restarting warpclip service after upgrade"
-      service_start
+  def start_if_stopped
+    unless self.class.service_active?(name)
+      ohai "Starting warpclip service"
+      system "brew", "services", "start", name
     end
   end
 
-  # Define what happens before service reinstall
-  def pre_reinstall
-    @service_was_running = service_active?
-    if @service_was_running
-      ohai "Stopping warpclip service for reinstall"
-      service_stop
-    end
+  # Handle service during reinstall
+  def pour_bottle?(*args)
+    # Stop the service before reinstall
+    @was_running = stop_if_needed 
+    super
   end
 
-  # Define what happens after service reinstall
-  def post_reinstall
-    if @service_was_running
+  # Restart service after reinstall if it was running before
+  def post_install
+    super
+    if @was_running
       ohai "Restarting warpclip service after reinstall"
-      service_start
+      start_if_stopped
+    end
+  end
+  
+  # Handle service during upgrade
+  def upgrade_bottle_pre_install
+    @was_running = stop_if_needed
+    super
+  end
+
+  # Restart service after upgrade if it was running before
+  def upgrade_bottle_post_install
+    super
+    if @was_running
+      ohai "Restarting warpclip service after upgrade"
+      start_if_stopped
     end
   end
 
-  # Define what happens before service uninstall
-  def pre_uninstall
-    if service_active?
-      ohai "Stopping warpclip service before uninstall"
-      service_stop
-    end
-  end
-
-  # Helper method to check if the service is running
-  def service_active?
-    system "brew", "services", "list", "warpclip", stdin_data: "", out: File::NULL
-    status = $?
-    service_list = `brew services list warpclip`.strip
-    service_list.include?("started") && status.success?
-  end
-
-  # Helper method to stop the service
-  def service_stop
-    system "brew", "services", "stop", "warpclip"
-  end
-
-  # Helper method to start the service
-  def service_start
-    system "brew", "services", "start", "warpclip"
+  # Helper class method to check if a service is running
+  def self.service_active?(name)
+    service_list = `brew services list #{name}`.strip
+    service_list.include?("started")
   end
 
   def caveats
