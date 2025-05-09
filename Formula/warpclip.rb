@@ -15,6 +15,13 @@ class Warpclip < Formula
   depends_on "go" => :build
 
   def install
+    # Check if service is running before installation
+    was_running = Utils.popen_read(HOMEBREW_BREW_FILE, "services", "list", name).include?("started")
+    if was_running
+      ohai "Stopping warpclip service for installation"
+      system HOMEBREW_BREW_FILE, "services", "stop", name
+    end
+
     # Build the Go server daemon
     system "go", "build", "-o", bin/"warpclipd", 
            "-ldflags", "-X main.Version=#{version}",
@@ -32,6 +39,29 @@ class Warpclip < Formula
     # Install example files to share directory
     share.install "etc/com.user.warpclip.plist"
     share.install "examples/ssh_config" => "warpclip-ssh-config-example"
+    
+    # Create log files with proper permissions
+    ["#{Dir.home}/.warpclip.log",
+     "#{Dir.home}/.warpclip.debug.log",
+     "#{Dir.home}/.warpclip.out.log",
+     "#{Dir.home}/.warpclip.error.log"].each do |f|
+      unless File.exist?(f)
+        touch f
+        chmod 0600, f
+      end
+    end
+
+    # Setup SSH config
+    setup_ssh_config
+    
+    # Restart service if it was running before
+    if was_running
+      ohai "Restarting warpclip service after installation"
+      system HOMEBREW_BREW_FILE, "services", "restart", name
+    else
+      ohai "WarpClip installation complete. Service will start automatically at login."
+      ohai "You can manually start it now with: brew services start #{name}"
+    end
   end
 
   def setup_ssh_config
@@ -183,41 +213,6 @@ Host *
   end
   
 
-  # Hook called during bottle install, reinstall, and upgrade
-  def pour_bottle?
-    if (status = Utils.popen_read(HOMEBREW_BREW_FILE, "services", "list", name).include?("started"))
-      ohai "Stopping warpclip service for installation/reinstall"
-      system HOMEBREW_BREW_FILE, "services", "stop", name
-      ENV["HOMEBREW_WARPCLIP_WAS_RUNNING"] = "1"
-    end
-    true
-  end
-
-  def post_install
-    # Create log files with proper permissions
-    ["#{Dir.home}/.warpclip.log",
-     "#{Dir.home}/.warpclip.debug.log",
-     "#{Dir.home}/.warpclip.out.log",
-     "#{Dir.home}/.warpclip.error.log"].each do |f|
-      unless File.exist?(f)
-        touch f
-        chmod 0600, f
-      end
-    end
-
-    # Setup SSH config
-    setup_ssh_config
-
-    # Restart service if it was running before
-    if ENV["HOMEBREW_WARPCLIP_WAS_RUNNING"] == "1"
-      ohai "Restarting warpclip service after installation"
-      system HOMEBREW_BREW_FILE, "services", "restart", name
-      ENV.delete("HOMEBREW_WARPCLIP_WAS_RUNNING")
-    else
-      ohai "WarpClip installation complete. Service will start automatically at login."
-      ohai "You can manually start it now with: brew services start #{name}"
-    end
-  end
 
   def caveats
     <<~EOS
