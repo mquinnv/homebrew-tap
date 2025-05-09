@@ -15,13 +15,6 @@ class Warpclip < Formula
   depends_on "go" => :build
 
   def install
-    # Check if service is running before installation
-    was_running = Utils.popen_read(HOMEBREW_BREW_FILE, "services", "list", name).include?("started")
-    if was_running
-      ohai "Stopping warpclip service for installation"
-      system HOMEBREW_BREW_FILE, "services", "stop", name
-    end
-
     # Build the Go server daemon
     system "go", "build", "-o", bin/"warpclipd", 
            "-ldflags", "-X main.Version=#{version}",
@@ -54,13 +47,24 @@ class Warpclip < Formula
     # Setup SSH config
     setup_ssh_config
     
-    # Restart service if it was running before
-    if was_running
-      ohai "Restarting warpclip service after installation"
-      system HOMEBREW_BREW_FILE, "services", "restart", name
+    ohai "WarpClip installation complete. Service will start automatically at login."
+    ohai "You can manually start it now with: brew services start #{name}"
+  end
+  
+  # Handle service management during reinstalls and upgrades
+  on_replaced do |other_version|
+    if other_version.any? && (status = Utils.popen_read(HOMEBREW_BREW_FILE, "services", "list", name).include?("started"))
+      ohai "Stopping warpclip service for replacement"
+      quiet_system HOMEBREW_BREW_FILE, "services", "stop", name
+
+      # Yield to allow the replacement to occur
+      result = yield
+
+      ohai "Restarting warpclip service after replacement"
+      quiet_system HOMEBREW_BREW_FILE, "services", "restart", name
+      result
     else
-      ohai "WarpClip installation complete. Service will start automatically at login."
-      ohai "You can manually start it now with: brew services start #{name}"
+      yield
     end
   end
 
