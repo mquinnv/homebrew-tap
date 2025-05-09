@@ -49,9 +49,15 @@ class Warpclip < Formula
     # Setup SSH config
     setup_ssh_config
 
-    # Print instructions for loading the service
-    ohai "WarpClip installation complete. Start the service with:"
-    puts "  brew services start warpclip"
+    # Start the service automatically
+    if defined?(@was_running)
+      # For reinstall/upgrade, this will be handled by post_install/upgrade_bottle_post_install 
+      ohai "WarpClip installation complete. Service state will be managed by the upgrade/reinstall process."
+    else
+      # For initial installation, start the service
+      ohai "WarpClip installation complete. Starting service automatically..."
+      system "brew", "services", "start", name
+    end
   end
 
   def setup_ssh_config
@@ -225,12 +231,22 @@ Host *
   def pour_bottle?(*args)
     # Stop the service before reinstall
     @was_running = stop_if_needed 
-    super
+    result = super
+    # Schedule post-installation tasks
+    if result
+      singleton_class.class_eval do
+        alias_method :old_post_install, :post_install
+        define_method(:post_install) do
+          old_post_install
+          post_install_reinstall
+        end
+      end
+    end
+    result
   end
 
   # Restart service after reinstall if it was running before
-  def post_install
-    super
+  def post_install_reinstall
     if @was_running
       ohai "Restarting warpclip service after reinstall"
       start_if_stopped
