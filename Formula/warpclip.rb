@@ -183,20 +183,13 @@ Host *
   end
   
 
-  # Detect if service is running
-  def service_running?
-    service_info = `brew services list #{name}`.strip
-    service_info.include?("started")
-  end
-
   # Service management hooks
   def pre_install
-    # Save service state before installation/reinstall
-    @was_running = service_running?
-    if @was_running
-      operation = caller.any? { |c| c.include?("reinstall") } ? "reinstall" : "installation"
-      ohai "Stopping warpclip service before #{operation}"
-      system "brew", "services", "stop", name
+    # Store current service status
+    @service_was_running = quiet_system("brew", "services", "list", name, "-q", "--started")
+    if @service_was_running
+      ohai "Stopping warpclip service for #{File.basename(caller[0]) =~ /reinstall/ ? 'reinstall' : 'installation'}"
+      quiet_system "brew", "services", "stop", name
     end
   end
 
@@ -216,10 +209,9 @@ Host *
     setup_ssh_config
 
     # Restart service if it was running before
-    if defined?(@was_running) && @was_running
-      operation = caller.any? { |c| c.include?("reinstall") } ? "reinstall" : "installation"
-      ohai "Restarting warpclip service after #{operation}"
-      system "brew", "services", "restart", name
+    if defined?(@service_was_running) && @service_was_running
+      ohai "Restarting warpclip service after #{File.basename(caller[0]) =~ /reinstall/ ? 'reinstall' : 'installation'}"
+      quiet_system "brew", "services", "restart", name
     else
       ohai "WarpClip installation complete. Service will start automatically at login."
       ohai "You can manually start it now with: brew services start #{name}"
