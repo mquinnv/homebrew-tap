@@ -51,22 +51,6 @@ class Warpclip < Formula
     ohai "You can manually start it now with: brew services start #{name}"
   end
   
-  # Handle service management during reinstalls and upgrades
-  on_replaced do |other_version|
-    if other_version.any? && (status = Utils.popen_read(HOMEBREW_BREW_FILE, "services", "list", name).include?("started"))
-      ohai "Stopping warpclip service for replacement"
-      quiet_system HOMEBREW_BREW_FILE, "services", "stop", name
-
-      # Yield to allow the replacement to occur
-      result = yield
-
-      ohai "Restarting warpclip service after replacement"
-      quiet_system HOMEBREW_BREW_FILE, "services", "restart", name
-      result
-    else
-      yield
-    end
-  end
 
   def setup_ssh_config
     ssh_config_path = "#{Dir.home}/.ssh/config"
@@ -269,6 +253,9 @@ Host *
         cat ~/.warpclip.log
         cat ~/.warpclip.debug.log
       • Restart service:
+        brew services restart warpclip
+        
+      NOTE: After reinstall or upgrade, you may need to manually restart the service:
         brew services restart warpclip
     EOS
   end
