@@ -16,24 +16,20 @@ class Warpclip < Formula
   depends_on "go" => :build
 
   def install
-    # Build from Go source
-    system "go", "build", "-o", "warpclip", "./cmd/warpclip"
-    system "go", "build", "-o", "warpclipd", "./cmd/warpclipd"
+    # Build from Go source with version information
+    system "go", "build", 
+           "-ldflags", "-X main.Version=#{version}",
+           "-o", "warpclip", 
+           "./cmd/warpclip"
+    
+    system "go", "build", 
+           "-ldflags", "-X main.Version=#{version}",
+           "-o", "warpclipd", 
+           "./cmd/warpclipd"
     
     # Install the main command-line tool and server daemon
     bin.install "warpclip"
     bin.install "warpclipd"
-    
-    # Update version and ensure proper localhost binding
-    inreplace bin/"warpclipd" do |s|
-      s.gsub!(/^VERSION=.*$/, %Q(VERSION="#{version}"))
-      
-      # Update version and binding address
-      
-      # Ensure consistent port configuration
-      s.gsub!(/^PORT=.*$/, 'PORT="8888"')
-      s.gsub!(/^BIND_ADDRESS=.*$/, 'BIND_ADDRESS="127.0.0.1"')
-    end
     
     # Set the proper permissions
     chmod 0755, bin/"warpclip"
