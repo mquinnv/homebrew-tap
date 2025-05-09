@@ -194,43 +194,56 @@ Host *
 
     # Restart if the process exits for any reason (with delay to prevent rapid restarts)
     restart_delay 5
+
+    # Enable service hooks for reinstall, upgrade, and uninstall operations
+    process_type :supervisor
   end
 
+
   # Stop the service before upgrade and restart it after
-  def on_upgrade
+  def post_install_defined?
+    true
+  end
+
+  # Define what happens before service upgrade
+  def pre_upgrade
     if service_active?
       ohai "Stopping warpclip service for upgrade"
       service_stop
-      result = yield
+    end
+  end
+
+  # Define what happens after service upgrade
+  def post_upgrade
+    if @service_was_running
       ohai "Restarting warpclip service after upgrade"
       service_start
-      result
-    else
-      yield
     end
   end
 
-  # Stop the service before reinstall and restart it after
-  def on_reinstall
-    if service_active?
+  # Define what happens before service reinstall
+  def pre_reinstall
+    @service_was_running = service_active?
+    if @service_was_running
       ohai "Stopping warpclip service for reinstall"
       service_stop
-      result = yield
-      ohai "Restarting warpclip service after reinstall"
-      service_start
-      result
-    else
-      yield
     end
   end
 
-  # Stop the service on uninstall
-  def on_uninstall
+  # Define what happens after service reinstall
+  def post_reinstall
+    if @service_was_running
+      ohai "Restarting warpclip service after reinstall"
+      service_start
+    end
+  end
+
+  # Define what happens before service uninstall
+  def pre_uninstall
     if service_active?
       ohai "Stopping warpclip service before uninstall"
       service_stop
     end
-    yield
   end
 
   # Helper method to check if the service is running
