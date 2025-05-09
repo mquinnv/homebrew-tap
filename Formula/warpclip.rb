@@ -1,8 +1,8 @@
 class Warpclip < Formula
   desc "Remote-to-local clipboard integration for terminal users"
   homepage "https://github.com/mquinnv/warpclip"
-  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.1.tar.gz"
-  sha256 "1da8468757e966ac716fba7db048155dffd68752b362c4dad7ef24c3fe7a34d2"
+  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v2.1.3.tar.gz"
+  sha256 "90779b3962c967013e8f886691baf27f8b2f06870c5a5ed345302412eac99b2b"
   license "MIT"
   head "https://github.com/mquinnv/warpclip.git", branch: "main"
 
@@ -194,6 +194,61 @@ Host *
 
     # Restart if the process exits for any reason (with delay to prevent rapid restarts)
     restart_delay 5
+  end
+
+  # Stop the service before upgrade and restart it after
+  def on_upgrade
+    if service_active?
+      ohai "Stopping warpclip service for upgrade"
+      service_stop
+      result = yield
+      ohai "Restarting warpclip service after upgrade"
+      service_start
+      result
+    else
+      yield
+    end
+  end
+
+  # Stop the service before reinstall and restart it after
+  def on_reinstall
+    if service_active?
+      ohai "Stopping warpclip service for reinstall"
+      service_stop
+      result = yield
+      ohai "Restarting warpclip service after reinstall"
+      service_start
+      result
+    else
+      yield
+    end
+  end
+
+  # Stop the service on uninstall
+  def on_uninstall
+    if service_active?
+      ohai "Stopping warpclip service before uninstall"
+      service_stop
+    end
+    yield
+  end
+
+  # Helper method to check if the service is running
+  def service_active?
+    system "brew", "services", "list", "warpclip", stdin_data: "", out: File::NULL
+    status = $?
+    service_list = `brew services list warpclip`.strip
+    service_list.include?("started") && status.success?
+  end
+
+  # Helper method to stop the service
+  def service_stop
+    system "brew", "services", "stop", "warpclip"
+  end
+
+  # Helper method to start the service
+  def service_start
+    system "brew", "services", "start", "warpclip"
   end
 
   def caveats
