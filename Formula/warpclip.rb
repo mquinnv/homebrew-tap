@@ -1,8 +1,8 @@
 class Warpclip < Formula
   desc "Remote-to-local clipboard integration for terminal users"
   homepage "https://github.com/mquinnv/warpclip"
-  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v1.2.0.tar.gz"
-  sha256 "6a56549cf06c0c23adc4974485392bdd312aceb856275a685125e0d5f8f87178"
+  url "https://github.com/mquinnv/warpclip/archive/refs/tags/v1.2.1.tar.gz"
+  sha256 "db9e5d7d107a219bca8d837058340d83eae48e796b9008f318bc30f784716f66"
   license "MIT"
   head "https://github.com/mquinnv/warpclip.git", branch: "main"
 
@@ -11,7 +11,7 @@ class Warpclip < Formula
 
   livecheck do
     url :stable
-    regex(/^v?(\d+(?:\.\d+)+)$/i)
+    regex(/^v(\d+\.\d+\.\d+)$/i)
   end
 
   def install
