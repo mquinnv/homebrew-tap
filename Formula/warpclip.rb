@@ -49,14 +49,14 @@ class Warpclip < Formula
     # Setup SSH config
     setup_ssh_config
 
-    # Start the service automatically
+    # Inform about automatic service start
     if defined?(@was_running)
-      # For reinstall/upgrade, this will be handled by post_install/upgrade_bottle_post_install 
+      # For reinstall/upgrade, service state is managed by post_install/upgrade_bottle_post_install 
       ohai "WarpClip installation complete. Service state will be managed by the upgrade/reinstall process."
     else
-      # For initial installation, start the service
-      ohai "WarpClip installation complete. Starting service automatically..."
-      system "brew", "services", "start", name
+      # For initial installation, inform about automatic start
+      ohai "WarpClip installation complete. Service will start automatically at login."
+      ohai "You can manually start it now with: brew services start #{name}"
     end
   end
 
@@ -276,9 +276,12 @@ Host *
 
   def caveats
     <<~EOS
-      WarpClip has been installed. To start the clipboard service:
-
-        brew services start warpclip
+      WarpClip has been installed. The clipboard service will start automatically at login.
+      
+      To manually manage the service:
+        brew services start warpclip    # Start the service now
+        brew services stop warpclip     # Stop the service
+        brew services restart warpclip  # Restart the service
 
       IMPORTANT: WarpClip consists of two components:
       1. LOCAL COMPONENT (warpclipd):
