@@ -180,24 +180,13 @@ Host *
 
     # Auto-start after installation
     run_at_load true
-  end
-
-
-  # Service management methods for upgrade, reinstall, and removal
-
-  # Called before package installation
-  def pre_install
-    # Save current service state
-    @service_was_running = service_active?
     
-    # Stop service if it's running
-    if @service_was_running
-      ohai "Stopping warpclip service for #{defined?(upgrade_bottle_pre_install) ? 'upgrade' : 'installation'}"
-      quiet_system "brew", "services", "stop", "warpclip"
+    # Restart on reinstall, brew upgrade, etc.
+    on_service_restart do
+      ohai "Restarting warpclip service after update"
     end
   end
 
-  # Called after package installation
   def post_install
     # Create log files with proper permissions
     ["#{Dir.home}/.warpclip.log",
@@ -213,19 +202,9 @@ Host *
     # Setup SSH config
     setup_ssh_config
 
-    # Restart service if it was running before or inform about automatic startup
-    if defined?(@service_was_running) && @service_was_running
-      ohai "Restarting warpclip service after #{defined?(upgrade_bottle_post_install) ? 'upgrade' : 'installation'}"
-      quiet_system "brew", "services", "restart", "warpclip"
-    else
-      ohai "WarpClip installation complete. Service will start automatically at login."
-      ohai "You can manually start it now with: brew services start #{name}"
-    end
-  end
-
-  # Method to check if service is active
-  def service_active?
-    `brew services list warpclip`.include?("started")
+    # Inform about service
+    ohai "WarpClip installation complete. Service will start automatically at login."
+    ohai "You can manually start it now with: brew services start #{name}"
   end
 
   def caveats
