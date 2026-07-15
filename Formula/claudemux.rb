@@ -1,7 +1,7 @@
 class Claudemux < Formula
   desc "Live status pane and tmux launcher for Claude Code sessions"
   homepage "https://github.com/mquinnv/claudemux"
-  version "1.0.0"
+  version "1.1.0"
   license "MIT"
 
   depends_on "git"
@@ -10,23 +10,23 @@ class Claudemux < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.0.0/claudemux_1.0.0_darwin_arm64.tar.gz"
-      sha256 "6a83e331a475631dfa198e3fa4ff0ca3be10fa8158e4c99ec138dfcd250b8c23"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.1.0/claudemux_1.1.0_darwin_arm64.tar.gz"
+      sha256 "9c4aeebccacd045e2678e09a937eeab8c384f2abf7c16828056b0d6bcc7c3179"
     end
     on_intel do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.0.0/claudemux_1.0.0_darwin_amd64.tar.gz"
-      sha256 "7a79b2321e10f56007ae17d48aaea7484054b5198e758cf7a95b7e1eb02962fc"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.1.0/claudemux_1.1.0_darwin_amd64.tar.gz"
+      sha256 "29dc8119a6d6a439198a78b17a125e6bd5cf77683c797a141c17916eb3d13db5"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.0.0/claudemux_1.0.0_linux_arm64.tar.gz"
-      sha256 "992f8ed422d1125d5e2298fc1397d9492ddb6a2e083688733e1017db56b45a0b"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.1.0/claudemux_1.1.0_linux_arm64.tar.gz"
+      sha256 "0ae87d742adf9948038dc541314468bc56411455e6820918decc25d31ca429ee"
     end
     on_intel do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.0.0/claudemux_1.0.0_linux_amd64.tar.gz"
-      sha256 "ea09451148b6799108ead9379a78e927801cb79c88a9b6133510446206e32629"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.1.0/claudemux_1.1.0_linux_amd64.tar.gz"
+      sha256 "bfab042559cadc40c8293ff9449cd1433914fd7024a04728f454cfa21910a9af"
     end
   end
 
