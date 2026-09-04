@@ -9,23 +9,23 @@ class Claudemux < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.3.1/claudemux_1.3.1_darwin_arm64.tar.gz"
-      sha256 "ce13938b13652a35bcf0402cbdbc45a6bea52c87462283b6e368e70bfceea5ad"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_darwin_arm64.tar.gz"
+      sha256 "f703164204f48facc05cb54de93da19c06672c10179591bc24405af6e02577c0"
     end
     on_intel do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.3.1/claudemux_1.3.1_darwin_amd64.tar.gz"
-      sha256 "d65a6539c84c19f9d4c47fde726ff35de8e8edd031fdf2a74abc98dfefc3727b"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_darwin_amd64.tar.gz"
+      sha256 "7d8a2f2f4db24a912c2fca38b8913864e16a15d0e0d64339a14366b8c12c11cb"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.3.1/claudemux_1.3.1_linux_arm64.tar.gz"
-      sha256 "01a3f9b72f8b1c1623e0616a9e0794c8de3de5fb17bf36c94f88c4bf71f1d096"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_linux_arm64.tar.gz"
+      sha256 "68c68babe2b2d763e2833d3ae66a9f91a58d8759ae3a430ab67c3a0d2931db8c"
     end
     on_intel do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.3.1/claudemux_1.3.1_linux_amd64.tar.gz"
-      sha256 "dc540e2ad89da91e151d78cc1abf7b4b264c26b4986a46ee2e8c2890d663ccce"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_linux_amd64.tar.gz"
+      sha256 "b66afa6ac84d21c70a0751d3a3a10643e86ec35be9f8923f37ecf9642dd53980"
     end
   end
 
