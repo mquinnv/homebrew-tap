@@ -4,45 +4,40 @@ class Claudemux < Formula
   license "MIT"
 
   depends_on "git"
-  depends_on "jq"
   depends_on "tmux"
 
   on_macos do
     on_arm do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_darwin_arm64.tar.gz"
-      sha256 "f703164204f48facc05cb54de93da19c06672c10179591bc24405af6e02577c0"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.5.0/claudemux_1.5.0_darwin_arm64.tar.gz"
+      sha256 "aee64a5b81fdc56469c0214620279653374d5a815f54cef69ad9ce89a021263b"
     end
     on_intel do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_darwin_amd64.tar.gz"
-      sha256 "7d8a2f2f4db24a912c2fca38b8913864e16a15d0e0d64339a14366b8c12c11cb"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.5.0/claudemux_1.5.0_darwin_amd64.tar.gz"
+      sha256 "7a5b016f8dc81fe083bc210137edd844bfb6e800023157c15c389967db5485dd"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_linux_arm64.tar.gz"
-      sha256 "68c68babe2b2d763e2833d3ae66a9f91a58d8759ae3a430ab67c3a0d2931db8c"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.5.0/claudemux_1.5.0_linux_arm64.tar.gz"
+      sha256 "2d9783fbb3a8fe1a461cdd6bb7df410d10221f001e43feef34a2f30172a66398"
     end
     on_intel do
-      url "https://github.com/mquinnv/claudemux/releases/download/v1.4.0/claudemux_1.4.0_linux_amd64.tar.gz"
-      sha256 "b66afa6ac84d21c70a0751d3a3a10643e86ec35be9f8923f37ecf9642dd53980"
+      url "https://github.com/mquinnv/claudemux/releases/download/v1.5.0/claudemux_1.5.0_linux_amd64.tar.gz"
+      sha256 "59b693cc096aa69ac28fcb1a2d2a1128754a174ffe37d583bae8ba0020917bbc"
     end
   end
 
   def install
-    # All six files must stay SIBLINGS: claudemux locates
-    # project-color-resolve.sh, and claudemux-head locates claudemux-map.sh,
-    # claudemux-worktree.sh and claudemux-ask.sh, by looking next to their own
-    # resolved path. Keep the real files together in libexec and put only
+    # All three files must stay SIBLINGS: claudemux locates
+    # project-color-resolve.sh by looking next to its own resolved path. The
+    # Claude Code hooks are claudemux-head subcommands, so there are no hook
+    # scripts to ship. Keep the real files together in libexec and put only
     # symlinks on PATH.
     #
-    # `claudemux-head hook ensure` validates EVERY name below before copying
-    # any of them, so omitting one silently disables hook registration
-    # entirely -- not just the missing script. Keep this list in sync with
-    # install.sh and .github/workflows/release.yml in mquinnv/claudemux.
-    libexec.install "claudemux-head", "claudemux",
-                    "project-color-resolve.sh", "claudemux-map.sh",
-                    "claudemux-worktree.sh", "claudemux-ask.sh"
+    # Keep this list in sync with install.sh and .github/workflows/release.yml
+    # in mquinnv/claudemux: naming a file the tarball lacks fails the install.
+    libexec.install "claudemux-head", "claudemux", "project-color-resolve.sh"
     bin.install_symlink libexec/"claudemux-head"
     bin.install_symlink libexec/"claudemux"
   end
